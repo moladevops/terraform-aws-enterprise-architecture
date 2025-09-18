@@ -1,4 +1,4 @@
-# main.tf - NIVEAU 3 : Architecture Enterprise Scalable
+# main.tf - NIVEAU 3 : Architecture Enterprise Scalable + Monitoring
 
 # 1. RÉSEAU PRIVÉ MULTI-ZONES
 resource "aws_vpc" "vpc_enterprise" {
@@ -214,7 +214,7 @@ resource "aws_launch_template" "web_template" {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>🚀 Architecture Niveau 3 - Scalable!</title>
+    <title>🚀 Architecture Niveau 3 - Scalable + Monitoring!</title>
     <style>
         body { font-family: Arial; margin: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
         .container { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 10px; }
@@ -224,7 +224,7 @@ resource "aws_launch_template" "web_template" {
 </head>
 <body>
     <div class="container">
-        <h1>🚀 NIVEAU 3 - Architecture Enterprise!</h1>
+        <h1>🚀 NIVEAU 3 - Architecture Enterprise + Monitoring!</h1>
         <div class="info">
             <h2>🏗️ Infrastructure Scalable</h2>
             <p>✅ Load Balancer</p>
@@ -232,6 +232,8 @@ resource "aws_launch_template" "web_template" {
             <p>✅ Multi-AZ Deployment</p>
             <p>✅ RDS Database</p>
             <p>✅ S3 Storage</p>
+            <p>✅ CloudWatch Monitoring</p>
+            <p>✅ Email Alerts</p>
         </div>
         <div class="info">
             <h3>📊 Instance Info:</h3>
@@ -240,13 +242,13 @@ resource "aws_launch_template" "web_template" {
             <p><strong>Time:</strong> <span id="time"></span></p>
         </div>
         <div class="info">
-            <h3>🎯 Prêt pour la production!</h3>
+            <h3>🎯 Production Ready!</h3>
             <p>Cette architecture peut gérer des millions d'utilisateurs!</p>
+            <p>Monitoring automatique avec alertes email!</p>
         </div>
     </div>
     
     <script>
-        // Récupérer les métadonnées AWS
         fetch('http://169.254.169.254/latest/meta-data/instance-id')
             .then(response => response.text())
             .then(data => document.getElementById('instance-id').textContent = data)
@@ -333,9 +335,9 @@ resource "aws_autoscaling_group" "web_asg" {
   vpc_zone_identifier = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
   target_group_arns   = [aws_lb_target_group.web_tg.arn]
   
-  min_size         = 2
-  max_size         = 5
-  desired_capacity = 2
+  min_size         = var.min_servers
+  max_size         = var.max_servers
+  desired_capacity = var.desired_servers
 
   launch_template {
     id      = aws_launch_template.web_template.id
@@ -418,4 +420,185 @@ resource "aws_s3_bucket_public_access_block" "app_storage_pab" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+# ================================
+# MONITORING ET ALERTES CLOUDWATCH
+# ================================
+
+# 19. SNS TOPIC POUR NOTIFICATIONS
+resource "aws_sns_topic" "alerts" {
+  name = "infrastructure-alerts"
+
+  tags = {
+    Name = "Infrastructure-Alerts"
+  }
+}
+
+# 20. SUBSCRIPTION EMAIL POUR ALERTES
+resource "aws_sns_topic_subscription" "email_alerts" {
+  topic_arn = aws_sns_topic.alerts.arn
+  protocol  = "email"
+  endpoint  = var.alert_email
+
+  depends_on = [aws_sns_topic.alerts]
+}
+
+# 21. POLICY AUTO SCALING - SCALE UP
+resource "aws_autoscaling_policy" "scale_up" {
+  name                   = "scale-up-policy"
+  scaling_adjustment     = 1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown              = var.scale_up_cooldown
+  autoscaling_group_name = aws_autoscaling_group.web_asg.name
+
+  policy_type = "SimpleScaling"
+}
+
+# 22. POLICY AUTO SCALING - SCALE DOWN
+resource "aws_autoscaling_policy" "scale_down" {
+  name                   = "scale-down-policy"
+  scaling_adjustment     = -1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown              = var.scale_down_cooldown
+  autoscaling_group_name = aws_autoscaling_group.web_asg.name
+
+  policy_type = "SimpleScaling"
+}
+
+# 23. CLOUDWATCH ALARME - CPU ÉLEVÉ (Scale Up)
+resource "aws_cloudwatch_metric_alarm" "high_cpu" {
+  alarm_name          = "high-cpu-utilization"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = var.cpu_high_threshold
+  alarm_description   = "This metric monitors ec2 cpu utilization"
+  alarm_actions       = [aws_sns_topic.alerts.arn, aws_autoscaling_policy.scale_up.arn]
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.web_asg.name
+  }
+
+  tags = {
+    Name = "High-CPU-Alarm"
+  }
+}
+
+# 24. CLOUDWATCH ALARME - CPU FAIBLE (Scale Down)
+resource "aws_cloudwatch_metric_alarm" "low_cpu" {
+  alarm_name          = "low-cpu-utilization"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = var.cpu_low_threshold
+  alarm_description   = "This metric monitors ec2 cpu utilization"
+  alarm_actions       = [aws_sns_topic.alerts.arn, aws_autoscaling_policy.scale_down.arn]
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.web_asg.name
+  }
+
+  tags = {
+    Name = "Low-CPU-Alarm"
+  }
+}
+
+# 25. ALARME LOAD BALANCER - RÉPONSES 5XX
+resource "aws_cloudwatch_metric_alarm" "alb_5xx_errors" {
+  alarm_name          = "alb-high-5xx-errors"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "HTTPCode_ELB_5XX_Count"
+  namespace           = "AWS/ApplicationELB"
+  period              = "60"
+  statistic           = "Sum"
+  threshold           = "10"
+  alarm_description   = "This metric monitors ALB 5xx errors"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    LoadBalancer = aws_lb.main_alb.arn_suffix
+  }
+
+  tags = {
+    Name = "ALB-5XX-Errors"
+  }
+}
+
+# 26. ALARME BASE DE DONNÉES - CPU
+resource "aws_cloudwatch_metric_alarm" "rds_cpu" {
+  alarm_name          = "rds-high-cpu"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/RDS"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "80"
+  alarm_description   = "This metric monitors RDS cpu utilization"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.main_database.id
+  }
+
+  tags = {
+    Name = "RDS-High-CPU"
+  }
+}
+
+# 27. DASHBOARD CLOUDWATCH
+resource "aws_cloudwatch_dashboard" "main_dashboard" {
+  dashboard_name = "infrastructure-monitoring"
+
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type   = "metric"
+        x      = 0
+        y      = 0
+        width  = 12
+        height = 6
+
+        properties = {
+          metrics = [
+            ["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", aws_autoscaling_group.web_asg.name],
+            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", aws_lb.main_alb.arn_suffix],
+            ["AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", aws_lb.main_alb.arn_suffix],
+            ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", aws_db_instance.main_database.id]
+          ]
+          period = 300
+          stat   = "Average"
+          region = "us-east-1"
+          title  = "Infrastructure Metrics"
+        }
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 6
+        width  = 12
+        height = 6
+
+        properties = {
+          metrics = [
+            ["AWS/ApplicationELB", "HTTPCode_ELB_5XX_Count", "LoadBalancer", aws_lb.main_alb.arn_suffix],
+            ["AWS/ApplicationELB", "HTTPCode_Target_2XX_Count", "LoadBalancer", aws_lb.main_alb.arn_suffix],
+            ["AWS/ApplicationELB", "UnHealthyHostCount", "TargetGroup", aws_lb_target_group.web_tg.arn_suffix, "LoadBalancer", aws_lb.main_alb.arn_suffix]
+          ]
+          period = 300
+          stat   = "Sum"
+          region = "us-east-1"
+          title  = "Application Health"
+        }
+      }
+    ]
+  })
 }
