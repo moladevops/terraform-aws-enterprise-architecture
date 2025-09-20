@@ -113,10 +113,10 @@ output "sns_topic_arn" {
 output "monitoring_alarms" {
   description = "📈 Liste des alarmes configurées"
   value = {
-    high_cpu_alarm    = aws_cloudwatch_metric_alarm.high_cpu.alarm_name
-    low_cpu_alarm     = aws_cloudwatch_metric_alarm.low_cpu.alarm_name
-    alb_errors_alarm  = aws_cloudwatch_metric_alarm.alb_5xx_errors.alarm_name
-    rds_cpu_alarm     = aws_cloudwatch_metric_alarm.rds_cpu.alarm_name
+    high_cpu_alarm   = aws_cloudwatch_metric_alarm.high_cpu.alarm_name
+    low_cpu_alarm    = aws_cloudwatch_metric_alarm.low_cpu.alarm_name
+    alb_errors_alarm = aws_cloudwatch_metric_alarm.alb_5xx_errors.alarm_name
+    rds_cpu_alarm    = aws_cloudwatch_metric_alarm.rds_cpu.alarm_name
   }
 }
 
@@ -147,7 +147,7 @@ output "security_groups" {
 
 output "architecture_summary" {
   description = "🎯 Résumé complet de ton architecture Level 3 + Monitoring"
-  value = <<-EOT
+  value       = <<-EOT
   
   🚀 ARCHITECTURE NIVEAU 3 + MONITORING DÉPLOYÉE AVEC SUCCÈS!
   
@@ -201,29 +201,29 @@ output "technical_details" {
   description = "🔧 Détails techniques pour le debugging"
   value = {
     # Réseau
-    vpc_cidr                = aws_vpc.vpc_enterprise.cidr_block
-    availability_zones      = ["us-east-1a", "us-east-1b"]
-    public_subnets         = [aws_subnet.public_subnet_1.cidr_block, aws_subnet.public_subnet_2.cidr_block]
-    private_subnets        = [aws_subnet.private_subnet_1.cidr_block, aws_subnet.private_subnet_2.cidr_block]
-    
+    vpc_cidr           = aws_vpc.vpc_enterprise.cidr_block
+    availability_zones = ["us-east-1a", "us-east-1b"]
+    public_subnets     = [aws_subnet.public_subnet_1.cidr_block, aws_subnet.public_subnet_2.cidr_block]
+    private_subnets    = [aws_subnet.private_subnet_1.cidr_block, aws_subnet.private_subnet_2.cidr_block]
+
     # Compute
-    instance_type          = var.instance_type
-    ami_id                 = data.aws_ami.ubuntu.id
+    instance_type           = var.instance_type
+    ami_id                  = data.aws_ami.ubuntu.id
     launch_template_version = aws_launch_template.web_template.latest_version
-    
+
     # Database
-    database_engine        = aws_db_instance.main_database.engine
-    database_version       = aws_db_instance.main_database.engine_version
-    database_class         = aws_db_instance.main_database.instance_class
-    
+    database_engine  = aws_db_instance.main_database.engine
+    database_version = aws_db_instance.main_database.engine_version
+    database_class   = aws_db_instance.main_database.instance_class
+
     # Monitoring
-    dashboard_name         = aws_cloudwatch_dashboard.main_dashboard.dashboard_name
-    sns_topic_name         = aws_sns_topic.alerts.name
-    
+    dashboard_name = aws_cloudwatch_dashboard.main_dashboard.dashboard_name
+    sns_topic_name = aws_sns_topic.alerts.name
+
     # Scaling
-    min_capacity          = aws_autoscaling_group.web_asg.min_size
-    max_capacity          = aws_autoscaling_group.web_asg.max_size
-    desired_capacity      = aws_autoscaling_group.web_asg.desired_capacity
+    min_capacity     = aws_autoscaling_group.web_asg.min_size
+    max_capacity     = aws_autoscaling_group.web_asg.max_size
+    desired_capacity = aws_autoscaling_group.web_asg.desired_capacity
   }
 }
 
@@ -233,7 +233,7 @@ output "technical_details" {
 
 output "useful_commands" {
   description = "💡 Commandes utiles pour la gestion"
-  value = <<-EOT
+  value       = <<-EOT
   
   📋 COMMANDES UTILES:
   
