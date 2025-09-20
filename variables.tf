@@ -63,7 +63,7 @@ variable "cpu_high_threshold" {
   description = "Seuil CPU pour déclencher scale up (%)"
   type        = number
   default     = 80
-  
+
   validation {
     condition     = var.cpu_high_threshold > 0 && var.cpu_high_threshold <= 100
     error_message = "Le seuil CPU doit être entre 1 et 100."
@@ -74,7 +74,7 @@ variable "cpu_low_threshold" {
   description = "Seuil CPU pour déclencher scale down (%)"
   type        = number
   default     = 20
-  
+
   validation {
     condition     = var.cpu_low_threshold > 0 && var.cpu_low_threshold <= 100
     error_message = "Le seuil CPU doit être entre 1 et 100."

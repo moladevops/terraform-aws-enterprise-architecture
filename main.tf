@@ -334,7 +334,7 @@ resource "aws_autoscaling_group" "web_asg" {
   name                = "web-autoscaling-group"
   vpc_zone_identifier = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
   target_group_arns   = [aws_lb_target_group.web_tg.arn]
-  
+
   min_size         = var.min_servers
   max_size         = var.max_servers
   desired_capacity = var.desired_servers
@@ -364,27 +364,27 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 # 17. BASE DE DONNÉES RDS
 resource "aws_db_instance" "main_database" {
   identifier = "main-database"
-  
+
   engine         = "mysql"
   engine_version = "8.0"
   instance_class = "db.t3.micro"
-  
+
   allocated_storage     = 20
   max_allocated_storage = 100
   storage_type          = "gp2"
   storage_encrypted     = true
-  
+
   db_name  = "webapp"
   username = "admin"
   password = var.db_password
-  
+
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.name
-  
+
   backup_retention_period = 7
-  backup_window          = "03:00-04:00"
-  maintenance_window     = "sun:04:00-sun:05:00"
-  
+  backup_window           = "03:00-04:00"
+  maintenance_window      = "sun:04:00-sun:05:00"
+
   skip_final_snapshot = true
   deletion_protection = false
 
@@ -449,7 +449,7 @@ resource "aws_autoscaling_policy" "scale_up" {
   name                   = "scale-up-policy"
   scaling_adjustment     = 1
   adjustment_type        = "ChangeInCapacity"
-  cooldown              = var.scale_up_cooldown
+  cooldown               = var.scale_up_cooldown
   autoscaling_group_name = aws_autoscaling_group.web_asg.name
 
   policy_type = "SimpleScaling"
@@ -460,7 +460,7 @@ resource "aws_autoscaling_policy" "scale_down" {
   name                   = "scale-down-policy"
   scaling_adjustment     = -1
   adjustment_type        = "ChangeInCapacity"
-  cooldown              = var.scale_down_cooldown
+  cooldown               = var.scale_down_cooldown
   autoscaling_group_name = aws_autoscaling_group.web_asg.name
 
   policy_type = "SimpleScaling"
