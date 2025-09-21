@@ -194,6 +194,11 @@ data "aws_ami" "ubuntu" {
   }
 }
 
+# RANDOM ID - DÉPLACÉ ICI POUR ÊTRE DISPONIBLE PARTOUT
+resource "random_id" "bucket_suffix" {
+  byte_length = 8
+}
+
 # 11. LAUNCH TEMPLATE POUR AUTO SCALING
 resource "aws_launch_template" "web_template" {
   name_prefix   = "web-template-"
@@ -280,7 +285,7 @@ HTML
 
 # 12. APPLICATION LOAD BALANCER
 resource "aws_lb" "main_alb" {
-  name               = "main-alb"
+  name               = "main-alb-${random_id.bucket_suffix.hex}"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
@@ -293,9 +298,9 @@ resource "aws_lb" "main_alb" {
   }
 }
 
-# 13. TARGET GROUP POUR LOAD BALANCER
+# 13. TARGET GROUP POUR LOAD BALANCER - MODIFIÉ AVEC NOM DYNAMIQUE
 resource "aws_lb_target_group" "web_tg" {
-  name     = "web-targets"
+  name     = "web-targets-${random_id.bucket_suffix.hex}"
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.vpc_enterprise.id
@@ -351,9 +356,9 @@ resource "aws_autoscaling_group" "web_asg" {
   }
 }
 
-# 16. SUBNET GROUP POUR RDS
+# 16. SUBNET GROUP POUR RDS - MODIFIÉ AVEC NOM DYNAMIQUE
 resource "aws_db_subnet_group" "db_subnet_group" {
-  name       = "db-subnet-group"
+  name       = "db-subnet-group-${random_id.bucket_suffix.hex}"
   subnet_ids = [aws_subnet.private_subnet_1.id, aws_subnet.private_subnet_2.id]
 
   tags = {
@@ -400,10 +405,6 @@ resource "aws_s3_bucket" "app_storage" {
   tags = {
     Name = "App-Storage-Level3"
   }
-}
-
-resource "random_id" "bucket_suffix" {
-  byte_length = 8
 }
 
 resource "aws_s3_bucket_versioning" "app_storage_versioning" {
