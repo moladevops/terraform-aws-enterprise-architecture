@@ -272,8 +272,8 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 
 **Votre Nom** - DevOps Engineer
 
-- GitHub: [@votre-username](https://github.com/votre-username)
-- LinkedIn: [Votre Profil](https://linkedin.com/in/votre-profil)
+- GitHub: Moladevops https://github.com/moladevops
+- LinkedIn: mola Mayi https://www.linkedin.com/in/mola-mayi-a34438158?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app
 
 ## 🙏 Remerciements
 
